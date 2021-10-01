@@ -15,7 +15,7 @@ LLVM_LIBS := `llvm-config --system-libs --libs all`
 .PHONY: clean
 
 all: target
-	clang++ -std=c++17 -Wall -Wextra -O0 -g $(LLVM_FLAGS) hello-llvm.cpp $(LLVM_LIBS) -o hello-llvm
+	clang++ -std=c++17 -Wall -Wextra -O0 -g -fsanitize=address,undefined -fno-omit-frame-pointer $(LLVM_FLAGS) hello-llvm.cpp $(LLVM_LIBS) -o hello-llvm
 
 target:
 	clang++ -std=c++17 -Wall -Wextra -emit-llvm -S -fno-discard-value-names target-program.cpp
@@ -23,3 +23,4 @@ target:
 clean:
 	rm -f hello-llvm
 	rm -f target-program.ll
+	rm -f target-program.bc

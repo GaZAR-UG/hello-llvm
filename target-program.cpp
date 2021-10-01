@@ -1,17 +1,17 @@
-int add(int a, int b) { return a + b; }
+int add(int A, int B) { return A + B; }
 
-int inc(int a) { return ++a; }
+int inc(int A) { return ++A; }
 
-int (*fptr)(int) = &inc;
+int (*Fptr)(int) = &inc; // NOLINT
 
-int main(int argc, char **argv) {
-  int i = 42;
-  int j = 13;
-  int k = add(i, j);
-  k = inc(k);
-  for (int i = 0; i < 100; ++i) {
-    ++k;
+int main() {
+  int I = 42;
+  int J = 13;
+  int K = add(I, J);
+  K = inc(K);
+  for (int Idx = 0; Idx < 100; ++Idx) {
+    ++K;
   }
-  k = fptr(k);
-  return k;
+  K = Fptr(K);
+  return K;
 }

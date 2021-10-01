@@ -13,8 +13,8 @@
 #include <memory>
 
 #include "llvm/IR/BasicBlock.h"
-#include "llvm/IR/CallSite.h"
 #include "llvm/IR/Function.h"
+#include "llvm/IR/InstrTypes.h"
 #include "llvm/IR/Instruction.h"
 #include "llvm/IR/Instructions.h"
 #include "llvm/IR/Module.h"
@@ -23,15 +23,16 @@
 #include "llvm/Support/SourceMgr.h"
 #include "llvm/Support/raw_ostream.h"
 
-int main(int argc, char **argv) {
-  if (argc != 2) {
+int main(int Argc, char **Argv) {
+  if (Argc != 2) {
     std::cout << "usage: <prog> <IR file>\n";
     return 1;
   }
   // Parse an LLVM IR file
   llvm::SMDiagnostic Diag;
-  std::unique_ptr<llvm::LLVMContext> Ctx(new llvm::LLVMContext);
-  std::unique_ptr<llvm::Module> M = llvm::parseIRFile(argv[1], Diag, *Ctx);
+  llvm::LLVMContext Ctx;
+  std::unique_ptr<llvm::Module> M =
+      llvm::parseIRFile(Argv[1], Diag, Ctx); // NOLINT
   // Check if the module is valid
   bool BrokenDbgInfo = false;
   if (llvm::verifyModule(*M, &llvm::errs(), &BrokenDbgInfo)) {
@@ -48,26 +49,16 @@ int main(int argc, char **argv) {
     for (const auto &BB : F) {
       for (const auto &I : BB) {
         if (const auto *Alloca = llvm::dyn_cast<llvm::AllocaInst>(&I)) {
-          llvm::outs() << "found alloca instruction, allocating: ";
-          Alloca->getAllocatedType()->print(llvm::outs());
+          llvm::outs() << "found alloca inst:\n";
+          Alloca->print(llvm::outs());
           llvm::outs() << '\n';
         }
-        if (const auto *Load = llvm::dyn_cast<llvm::LoadInst>(&I)) {
-          llvm::outs() << "found load instruction, loading from: ";
-          Load->getPointerOperand()->print(llvm::outs());
-          llvm::outs() << '\n';
-        }
-        if (llvm::isa<llvm::CallInst>(&I) || llvm::isa<llvm::InvokeInst>(&I)) {
-          llvm::ImmutableCallSite CS(&I);
-          if (!CS.isIndirectCall()) {
-            const auto *Callee = CS.getCalledFunction();
-            if (Callee) {
-              llvm::outs() << "found direct call to " << Callee->getName()
-                           << '\n';
-            }
+        if (const auto *CallSite = llvm::dyn_cast<llvm::CallBase>(&I)) {
+          if (const auto *Callee = CallSite->getCalledFunction()) {
+            llvm::outs() << "found callee: " << Callee->getName() << '\n';
           } else {
-            llvm::outs() << "found indirect call to ";
-            CS.getCalledValue()->print(llvm::outs());
+            llvm::outs() << "found indirect callsite: ";
+            CallSite->print(llvm::outs());
             llvm::outs() << '\n';
           }
         }
