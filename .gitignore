@@ -1,7 +1,9 @@
-# LLVM IR
+# Binaries
 *
 !/**/
 !*.*
+
+# LLVM IR
 *.ll
 *.bc
 
