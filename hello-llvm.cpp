@@ -9,7 +9,6 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include <iostream>
 #include <memory>
 
 #include "llvm/IR/BasicBlock.h"
@@ -25,7 +24,7 @@
 
 int main(int Argc, char **Argv) {
   if (Argc != 2) {
-    std::cout << "usage: <prog> <IR file>\n";
+    llvm::outs() << "usage: <prog> <IR file>\n";
     return 1;
   }
   // Parse an LLVM IR file
@@ -36,11 +35,11 @@ int main(int Argc, char **Argv) {
   // Check if the module is valid
   bool BrokenDbgInfo = false;
   if (llvm::verifyModule(*M, &llvm::errs(), &BrokenDbgInfo)) {
-    std::cerr << "error: invalid module\n";
+    llvm::errs() << "error: invalid module\n";
     return 1;
   }
   if (BrokenDbgInfo) {
-    std::cerr << "caution: debug info is broken\n";
+    llvm::errs() << "caution: debug info is broken\n";
   }
   // Iterate the IR and analyze the functions, basic blocks or individual
   // instructions.
@@ -49,17 +48,13 @@ int main(int Argc, char **Argv) {
     for (const auto &BB : F) {
       for (const auto &I : BB) {
         if (const auto *Alloca = llvm::dyn_cast<llvm::AllocaInst>(&I)) {
-          llvm::outs() << "found alloca inst:\n";
-          Alloca->print(llvm::outs());
-          llvm::outs() << '\n';
+          llvm::outs() << "found alloca inst: " << *Alloca << '\n';
         }
         if (const auto *CallSite = llvm::dyn_cast<llvm::CallBase>(&I)) {
           if (const auto *Callee = CallSite->getCalledFunction()) {
             llvm::outs() << "found callee: " << Callee->getName() << '\n';
           } else {
-            llvm::outs() << "found indirect callsite: ";
-            CallSite->print(llvm::outs());
-            llvm::outs() << '\n';
+            llvm::outs() << "found indirect callsite: " << *CallSite << '\n';
           }
         }
       }
